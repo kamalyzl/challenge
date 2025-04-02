@@ -4,7 +4,7 @@
   "description": "Gilded Rose kata in TypeScript",
   "scripts": {
     "compile": "tsc",
-    "dev": "tsc && node app/gilded-rose.js"
+    "dev": "tsc && node app/index.js"
   },
   "license": "MIT",
   "private": true,

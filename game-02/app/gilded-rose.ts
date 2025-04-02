@@ -1,32 +1,29 @@
-export class Item {
-    name: string;
-    sellIn: number;
-    quality: number;
-
-    constructor(name, sellIn, quality) {
-        this.name = name;
-        this.sellIn = sellIn;
-        this.quality = quality;
-    }
-}
+import { AgedBrieFactory } from "./factories/agedBrieFactory";
+import { BackstagePassFactory } from "./factories/backstagePassFactory";
+import { StandardProductFactory } from "./factories/standardProductFactory";
+import { SulfurasFactory } from "./factories/sulfurasFactory";
+import { AgedBrie } from "./products/agedBrie";
+import { BackstagePass } from "./products/backstagePass";
+import { Product } from "./products/product";
 
 export class GildedRose {
-    items: Array<Item>;
+    items: Array<Product>;
+    factories: { [key: string]: any };
 
-    private sulfuras: string = "Sulfuras, Hand of Ragnaros";
-    private agedBrie: string = "Aged Brie";
-    private backstage: string = "Backstage passes to a TAFKAL80ETC concert";
-
-    private maxQuality: number = 50;
-
-    constructor(items = [] as Array<Item>) {
+    constructor(items = [] as Array<Product>) {
         this.items = items;
+        this.factories = {
+            "Aged Brie": new AgedBrieFactory(),
+            "Backstage passes to a TAFKAL80ETC concert": new BackstagePassFactory(),
+            "Sulfuras, Hand of Ragnaros": new SulfurasFactory(),
+            "default": new StandardProductFactory()
+        }
     }
 
     updateQuality() {
         for (let item of this.items) {
-            this.updateProductSellIn(item);
-            this.UpdateProductQuality(item);
+            item.updateSellIn();
+            item.updateQuality();
 
             if (item.sellIn < 0) {
                 this.handleExpiredItem(item);
@@ -37,66 +34,14 @@ export class GildedRose {
         return this.items;
     }
 
-    private UpdateProductQuality(item: Item) {
-        if (!this.currentProducts(item)) {
-            this.decreaseQuantity(item);
-        } else if (item.name === this.backstage) {
-            this.handleBackstagePasses(item)
-        } else {
-            this.incrementQuality(item);
-        }
-    }
 
-    private handleBackstagePasses(item: Item) {
-        this.incrementQuality(item);
-
-        if (item.sellIn < 11) {
-            this.incrementQuality(item);
-        }
-        if (item.sellIn < 6) {
-            this.incrementQuality(item);
-        }
-    }
-
-    private incrementQuality(item: Item) {
-        if (item.quality < this.maxQuality) {
-            item.quality += 1
-        }
-    }
-
-    private decreaseQuantity(item: Item) {
-        if (item.quality > 0 && item.name !== this.sulfuras) {
-            item.quality -= 1;
-        }
-    }
-
-    private currentProducts(item: Item) {
-        return item.name == this.agedBrie || item.name == this.backstage || item.name == this.sulfuras
-    }
-
-    private updateProductSellIn(item: Item) {
-        if (item.name !== this.sulfuras) {
-            item.sellIn -= 1;
-        }
-    }
-
-    private handleExpiredItem(item: Item) {
-        if (item.name === this.agedBrie) {
-            this.incrementQuality(item);
-        } else if (item.name === this.backstage) {
+    private handleExpiredItem(item: Product) {
+        if (item instanceof AgedBrie) {
+            this.updateQuality();
+        } else if (item instanceof BackstagePass) {
             item.quality = 0;
         } else {
-            this.decreaseQuantity(item);
+            this.updateQuality();
         }
     }
 }
-
-var objs = new GildedRose([{ name: "Aged Brie", sellIn: 200, quality: 20 },
-{ name: "Aged Brie", sellIn: 9, quality: 9 },
-{ name: "Sulfuras, Hand of Ragnaros", sellIn: 200, quality: 80 },
-{ name: "Backstage passes to a TAFKAL80ETC concert", sellIn: 200, quality: 20 },
-{ name: "RANDOM", sellIn: 200, quality: 40 },
-{ name: "RANDOM 2", sellIn: 9, quality: 9 },
-{ name: "RANDOM 3", sellIn: 20, quality: 0 }]);
-
-objs.updateQuality();
